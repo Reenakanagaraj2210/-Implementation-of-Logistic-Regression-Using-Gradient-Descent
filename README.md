@@ -27,40 +27,49 @@ RegisterNumber:  212224040272
 ```
 ```
 import pandas as pd
-from sklearn.datasets import load_iris
-from sklearn.linear_model import SGDClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, confusion_matrix
+import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-iris=load_iris()
-df=pd.DataFrame(data=iris.data, columns=iris.feature_names)
-df['target']=iris.target
-print(df.head())
-X = df.drop('target',axis=1)
-y=df['target']
-X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
-sgd_clf=SGDClassifier(max_iter=1000, tol=1e-3)
-sgd_clf.fit(X_train,y_train)
-y_pred=sgd_clf.predict(X_test)
-accuracy=accuracy_score(y_test,y_pred)
-print(f"Accuracy: {accuracy:.3f}")
-cm=confusion_matrix(y_test,y_pred)
-print("Confusion Matrix:")
-print(cm)
-plt.figure(figsize=(6,4))
-sns.heatmap(cm, annot=True, cmap="Blues", fmt='d', xticklabels=iris.target_names, yticklabels=iris.target_names)
-plt.xlabel("Predicted Label")
-plt.ylabel("True Label")
-plt.title("Confusion Matrix")
-plt.show()
+data = pd.read_csv('Placement_Data.csv')
+data = data.drop(['sl_no', 'salary'], axis=1)
+cat_cols = ["gender","ssc_b","hsc_b","degree_t","workex","specialisation","status","hsc_s"]
+for col in cat_cols:
+    data[col] = data[col].astype('category').cat.codes
+X = data.iloc[:, :-1].values
+y = data.iloc[:, -1].values
+theta = np.random.randn(X.shape[1])
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+def loss(theta, X, y):
+    h = sigmoid(X.dot(theta))
+    return -np.sum(y*np.log(h + 1e-9) + (1-y)*np.log(1-h + 1e-9))  # avoid log(0)
+def gradient_descent(theta, X, y, alpha, num_iterations):
+    m = len(y)
+    for i in range(num_iterations):
+        h = sigmoid(X.dot(theta))
+        gradient = X.T.dot(h - y) / m
+        theta -= alpha * gradient
+    return theta
+theta = gradient_descent(theta, X, y, alpha=0.01, num_iterations=1000)
+def predict(theta, X):
+    h = sigmoid(X.dot(theta))
+    y_pred = np.where(h >= 0.5, 1, 0)
+    return y_pred
+y_pred = predict(theta, X)
+accuracy = np.mean(y_pred.flatten() == y)
+print("Accuracy: ", accuracy)
+print("Predictions on training data:", y_pred)
+xnew = np.array([[0,87,0,95,0,2,78,2,0,0,1,0]])
+y_prednew = predict(theta, xnew)
+print("Prediction for first new data:", y_prednew)
+
+xnew = np.array([[0,0,0,0,0,2,8,2,0,0,1,0]])
+y_prednew = predict(theta, xnew)
+print("Prediction for second new data:", y_prednew)
 
 ```
 ## Output:
 
-<img width="947" height="399" alt="Screenshot 2025-09-20 215229" src="https://github.com/user-attachments/assets/459b4c32-514e-49bb-9f77-e548f6906ab1" />
-
-<img width="905" height="509" alt="Screenshot 2025-09-20 215237" src="https://github.com/user-attachments/assets/52bcd9f5-7e37-417c-9b65-c0d7b1f3c04d" />
+<img width="1098" height="212" alt="Screenshot 2025-09-20 224832" src="https://github.com/user-attachments/assets/da52406d-45ce-4d3a-87c7-754b2142209c" />
 
 ## Result:
 Thus the program to implement the the Logistic Regression Using Gradient Descent is written and verified using python programming.
